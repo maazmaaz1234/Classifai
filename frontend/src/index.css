@@ -1,0 +1,97 @@
+/* ───────────────────────────────────────────────────────────
+   Classifai · design tokens and reset.
+   One scene: a black page and a ribbon of red, amber and electric-blue light. (Fonts are loaded in index.html:
+   Geist, Geist Mono and Instrument Serif italic.)
+   ─────────────────────────────────────────────────────────── */
+
+:root {
+  --font-display: "Geist", "Inter", "Helvetica Neue", system-ui, sans-serif;
+  --font-body: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-serif: "Instrument Serif", "Playfair Display", "Iowan Old Style", Georgia, serif;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-io: cubic-bezier(0.65, 0, 0.25, 1);
+  --ease-spring: cubic-bezier(0.3, 1.35, 0.4, 1);
+
+  --radius-lg: 26px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+
+  --bg: #040206;
+  --text: #f7f2f3;
+  --text-2: rgba(247, 242, 243, 0.8);
+  --text-3: rgba(247, 242, 243, 0.58);
+
+  --red: #ff2d46;          /* the Classifai red (the video's lime, turned red) */
+  --red-hi: #ff5a6e;
+  --red-lo: #b5081f;
+  --ember: #ff7a3d;
+  --rose: #ff4d9a;
+  --on-red: #1c0207;       /* dark text that sits on the red pills */
+
+  /* the ribbon's other colours: used for data, status and highlights next to the red */
+  --amber: #ffb83d;
+  --gold: #ffd166;
+  --blue: #3aa1ff;
+  --cyan: #35d4ff;
+  --lime: #7cf26b;
+
+  --panel: rgba(14, 7, 9, 0.62);
+  --panel-line: rgba(255, 255, 255, 0.11);
+  --glass: rgba(255, 255, 255, 0.06);
+  --glass-line: rgba(255, 255, 255, 0.16);
+  --field: rgba(255, 255, 255, 0.055);
+  --field-line: rgba(255, 255, 255, 0.15);
+  --grid: rgba(255, 255, 255, 0.09);
+
+  --good: #6ee7b7;
+  --warn: #fcd34d;
+  --bad: #ff5a6e;
+
+  --fly: 0; /* 0 → Pandu is on the Home page, 1 → Pandu has become the Ask Pandu button */
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  min-width: 320px;
+  background: var(--bg);
+  scroll-behavior: auto; /* page-to-page scrolling is eased in JS */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+#root { min-height: 100vh; }
+
+h1, h2, h3, h4, p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+img { display: block; max-width: 100%; }
+
+:focus-visible { outline: 2px solid var(--red-hi); outline-offset: 3px; }
+::selection { background: rgba(255, 45, 70, 0.45); }
+
+/* thin dark scrollbars */
+* { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.22) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}

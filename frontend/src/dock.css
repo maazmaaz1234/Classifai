@@ -1,0 +1,80 @@
+/* ───────────────────────────────────────────────────────────
+   The bottom navigation: a black pill with a liquid-glass lens.
+   The lens brightens and bends whatever passes behind it (that is the only backdrop blur, and it is tiny), has a bright
+   inner rim, a soft glow and a slow shimmer. It glides to the page you are on with a springy curve.
+   ─────────────────────────────────────────────────────────── */
+
+:root { --dock-w: 96px; --dock-h: 72px; }
+
+.dock {
+  position: fixed; z-index: 70; left: 50%; bottom: 24px; translate: -50% 0;
+  display: flex; align-items: stretch;
+  width: calc(var(--n, 5) * var(--dock-w) + 24px); max-width: calc(100vw - 20px); height: var(--dock-h); padding: 0 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #171116, #0a070b);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 34px 60px -22px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* the lens */
+.dock-lens {
+  position: absolute; z-index: 1; left: 12px; top: -11px; width: var(--dock-w); height: calc(var(--dock-h) + 22px); border-radius: 32px; pointer-events: none; overflow: hidden;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.05) 46%, rgba(255, 255, 255, 0.12));
+  -webkit-backdrop-filter: blur(2px) saturate(1.9) brightness(1.3);
+  backdrop-filter: blur(2px) saturate(1.9) brightness(1.3);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.42),
+    inset 3px 3px 10px rgba(255, 255, 255, 0.38),
+    inset -4px -7px 14px rgba(255, 255, 255, 0.14),
+    0 20px 36px -10px rgba(0, 0, 0, 0.65),
+    0 0 40px -10px rgba(255, 90, 110, 0.6);
+  transform: translateX(calc(var(--i, 0) * var(--dock-w))) scaleX(1);
+  transition: transform 0.62s cubic-bezier(0.3, 1.5, 0.4, 1);
+}
+.dock-lens.is-moving { transform: translateX(calc(var(--i, 0) * var(--dock-w))) scaleX(1.16); }
+/* a soft shimmer that crosses the lens now and then (it stops while you scroll) */
+.dock-lens::after {
+  content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.35) 50%, transparent 65%);
+  transform: translateX(-120%); animation: dock-sweep 4.5s ease-in-out infinite;
+}
+@keyframes dock-sweep { 0%, 55% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+html[data-scrolling="true"] .dock-lens::after { animation-play-state: paused; }
+/* browsers without backdrop blur: a plain frosted lens */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .dock-lens { background: linear-gradient(160deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.12)); }
+}
+
+/* the items */
+.dock-item {
+  position: relative; z-index: 2; flex: 1 1 0; min-width: 0; width: var(--dock-w); padding: 0; border: 0; background: transparent;
+  color: rgba(247, 242, 243, 0.6); display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-family: var(--font-body); font-weight: 600; font-size: 12.5px; letter-spacing: 0; cursor: pointer;
+  transition: color 0.3s;
+}
+.dock-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.5s cubic-bezier(0.3, 1.5, 0.4, 1), stroke-width 0.3s; }
+.dock-label { display: block; max-height: 0; opacity: 0; margin-top: 0; transform: translateY(5px); overflow: hidden; white-space: nowrap; transition: max-height 0.4s, opacity 0.35s, margin 0.4s, transform 0.45s var(--ease-out); }
+.dock-item:hover { color: #fff; }
+.dock-item:hover .dock-icon { transform: scale(1.12); }
+.dock-item:active .dock-icon { transform: scale(0.94); }
+.dock-item.is-active { color: #fff; }
+.dock-item.is-active .dock-icon { stroke-width: 2.3; filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.55)); }
+.dock-item.is-active .dock-label { max-height: 16px; opacity: 1; margin-top: 5px; transform: none; }
+.dock-item:focus-visible { outline: 2px solid var(--red-hi); outline-offset: -6px; border-radius: 28px; }
+
+/* it rises into place once the workspace is ready */
+html[data-ready="true"] .dock { animation: dock-in 1s var(--ease-out) 0.3s both; }
+@keyframes dock-in { from { opacity: 0; translate: -50% 40px; filter: blur(8px); } to { opacity: 1; translate: -50% 0; filter: blur(0); } }
+
+/* ── phones: the same pill, items shrink so five always fit ── */
+@media (max-width: 560px) {
+  :root { --dock-w: min(96px, calc((100vw - 44px) / 5)); --dock-h: 64px; }
+  .dock { bottom: 14px; padding: 0 10px; }
+  .dock-lens { left: 10px; top: -9px; height: calc(var(--dock-h) + 18px); border-radius: 28px; }
+  .dock { width: calc(var(--n, 5) * var(--dock-w) + 20px); }
+  .dock-label { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock-lens, .dock-icon, .dock-label { transition-duration: 0.01ms !important; }
+  .dock-lens::after { animation: none; }
+  html[data-ready="true"] .dock { animation-duration: 0.01ms; }
+}

@@ -1,0 +1,49 @@
+/* ───────────────────────────────────────────────────────────
+   Page-specific layouts: Home, Support, Customers, Dashboard.
+   ─────────────────────────────────────────────────────────── */
+
+/* ── Home ──────────────────────────────────────────────── */
+.hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); align-items: center; gap: clamp(20px, 4vw, 64px); }
+.hero-title { perspective: 1200px; }
+.hero-title-in { display: block; transform-origin: 0% 50%; will-change: transform; }
+.hero-line { display: block; white-space: nowrap; }
+.hero-title {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(46px, 6.5vw, 100px); line-height: 1; letter-spacing: -0.05em;
+}
+.hero-title .ital { font-size: 1.1em; letter-spacing: -0.02em; padding-right: 0.06em; }
+.hero-lede { margin-top: 30px; max-width: 35ch; font-size: clamp(17px, 1.55vw, 20px); line-height: 1.55; color: var(--text-2); }
+.hero-lede strong { color: var(--text); font-weight: 700; }
+.hero-stage { display: grid; place-items: center; }
+.pandu-slot { width: min(340px, 30vw); aspect-ratio: 230 / 340; }
+
+/* ── Support ───────────────────────────────────────────── */
+.support { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); align-items: center; gap: clamp(24px, 5vw, 80px); }
+.support-title { font-size: clamp(46px, 6.2vw, 92px); letter-spacing: -0.05em; }
+.support-title .ital { font-size: 1.1em; letter-spacing: -0.02em; padding-right: 0.06em; }
+.support-copy .page-sub { margin-top: 26px; max-width: 34ch; }
+.btn svg.pandu-face-icon { fill: initial; stroke: none; width: 26px; height: 26px; flex: none; margin-left: -8px; }
+.support-panel { padding: 22px 24px 14px; border-radius: 28px; }
+.support-kicker { margin-bottom: 8px; }
+.support-list { list-style: none; margin: 0; padding: 0; }
+.support-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "tag go" "q go"; column-gap: 16px; row-gap: 4px; align-items: center;
+  width: 100%; padding: 16px 6px; border: 0; border-top: 1px solid var(--panel-line); background: transparent; color: var(--text); text-align: left;
+  transition: background-color 0.25s, padding 0.35s var(--ease-out);
+}
+.support-row:hover { background: rgba(255, 255, 255, 0.045); padding-left: 14px; }
+.support-tag { grid-area: tag; }
+.support-q { grid-area: q; font-family: var(--font-display); font-weight: 600; font-size: clamp(17px, 1.6vw, 21px); line-height: 1.25; letter-spacing: -0.025em; }
+.support-row svg { grid-area: go; color: var(--text-3); transition: transform 0.4s var(--ease-spring), color 0.3s; }
+.support-row:hover svg { color: var(--red-hi); transform: translate(3px, -3px); }
+
+@media (max-width: 380px) {
+  .hero-title { font-size: 12vw; }   /* the longest line ("customers leave.") has to fit a 320 px phone */
+}
+@media (max-width: 860px) {
+  .support { grid-template-columns: 1fr; }
+  .hero { grid-template-columns: 1fr; text-align: left; }
+  .pandu-slot { width: min(236px, 58vw); }
+  .hero-stage { margin-top: 10px; }
+  .page { padding-top: 104px; padding-bottom: 130px; }
+}

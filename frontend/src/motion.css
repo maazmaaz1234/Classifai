@@ -1,0 +1,57 @@
+/* ───────────────────────────────────────────────────────────
+   Premium motion for the whole site.
+   Everything here is a short transform/opacity animation or a hover transition (nothing runs per frame in JavaScript),
+   and it all switches off for people who ask their computer for reduced motion.
+   Rules of thumb used throughout: things rise and un-blur into place, hovered things lift on a spring, pressed things sink.
+   ─────────────────────────────────────────────────────────── */
+
+@keyframes m-rise { from { opacity: 0; transform: translateY(18px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes m-pop { from { opacity: 0; transform: scale(0.92); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes m-sweep { from { transform: translateX(-130%) skewX(-18deg); } to { transform: translateX(260%) skewX(-18deg); } }
+
+/* ── buttons: lift on a spring, a light sweeps across the red ones, press to sink ── */
+.btn { position: relative; overflow: hidden; transition-timing-function: var(--ease-spring), ease, var(--ease-out), ease, ease; }
+.btn:hover:not(:disabled) { transform: translateY(-3px); }
+.btn:active:not(:disabled) { transform: translateY(0) scale(0.97); transition-duration: 0.12s; }
+.btn-primary::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; opacity: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.42) 50%, transparent 70%);
+  transform: translateX(-130%) skewX(-18deg);
+}
+.btn-primary:hover:not(:disabled)::after { opacity: 1; animation: m-sweep 0.9s var(--ease-out) both; }
+.btn-ghost:hover:not(:disabled) { box-shadow: 0 14px 30px -16px rgba(0, 0, 0, 0.9), 0 0 24px -12px rgba(255, 90, 110, 0.5); }
+.round-btn:active { transform: scale(0.94); }
+.chip:active:not(:disabled) { transform: translateY(0) scale(0.97); }
+.menu-item { transition: background-color 0.25s, color 0.25s, padding-left 0.35s var(--ease-spring); }
+.menu-item:hover:not(:disabled) { padding-left: 16px; }
+.logo-link:active { transform: scale(0.97); }
+
+/* ── the bottom bar: its icons rise one after another when the workspace opens ── */
+html[data-ready="true"] .dock-item { animation: m-rise 0.8s var(--ease-out) backwards; animation-delay: calc(0.55s + var(--k, 0) * 70ms); }
+.dock-item:nth-of-type(2) { --k: 1; } .dock-item:nth-of-type(3) { --k: 2; } .dock-item:nth-of-type(4) { --k: 3; } .dock-item:nth-of-type(5) { --k: 4; }
+
+/* ── lists that appear inside windows and menus: the rows arrive one after another ── */
+.ccard, .pick-tile, .pop-row, .dash-row, .csv-row, .avpick-opt, .kv-row {
+  animation: m-rise 0.7s var(--ease-out) backwards; animation-delay: calc(min(var(--k, 0), 9) * 55ms + 80ms);
+}
+.modal-root :is(.ccard, .pick-tile, .pop-row, .dash-row, .csv-row, .avpick-opt, .kv-row):nth-child(2) { --k: 1; }
+.modal-root :is(.ccard, .pick-tile, .pop-row, .dash-row, .csv-row, .avpick-opt, .kv-row):nth-child(3) { --k: 2; }
+.modal-root :is(.ccard, .pick-tile, .pop-row, .dash-row, .csv-row, .avpick-opt, .kv-row):nth-child(4) { --k: 3; }
+.modal-root :is(.ccard, .pick-tile, .pop-row, .dash-row, .csv-row, .avpick-opt, .kv-row):nth-child(5) { --k: 4; }
+.modal-root :is(.ccard, .pick-tile, .pop-row, .dash-row, .csv-row, .avpick-opt, .kv-row):nth-child(6) { --k: 5; }
+.modal-root :is(.ccard, .pick-tile, .pop-row, .dash-row, .csv-row, .avpick-opt, .kv-row):nth-child(7) { --k: 6; }
+.modal-root :is(.ccard, .pick-tile, .pop-row, .dash-row, .csv-row, .avpick-opt, .kv-row):nth-child(8) { --k: 7; }
+.modal-root :is(.ccard, .pick-tile, .pop-row, .dash-row, .csv-row, .avpick-opt, .kv-row):nth-child(n+9) { --k: 8; }
+
+/* ── pages: when a page arrives its list rows follow its headline ── */
+html[data-ready="true"] .page[data-active="true"] .support-row { animation: m-rise 0.8s var(--ease-out) backwards; animation-delay: calc(0.35s + var(--k, 0) * 80ms); }
+.support-row:nth-child(2) { --k: 1; } .support-row:nth-child(3) { --k: 2; } .support-row:nth-child(4) { --k: 3; } .support-row:nth-child(5) { --k: 4; } .support-row:nth-child(n+6) { --k: 5; }
+
+/* ── menus and toasts pop out of their corner ── */
+.profile-menu, .pop { animation-timing-function: var(--ease-spring); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary::after { display: none; }
+  .dock-item, .ccard, .pick-tile, .pop-row, .dash-row, .csv-row, .avpick-opt, .kv-row, .support-row { animation: none !important; }
+  .btn, .menu-item { transition-duration: 0.01ms !important; }
+}

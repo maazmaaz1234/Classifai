@@ -1,0 +1,12 @@
+# Never put these on GitHub: they hold secrets or private customer data, or are huge.
+.env
+**/.env
+*.db
+*.db-wal
+*.db-shm
+node_modules/
+.venv/
+venv/
+__pycache__/
+.idea/
+dist/

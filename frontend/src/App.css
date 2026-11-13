@@ -1,0 +1,367 @@
+/* ───────────────────────────────────────────────────────────
+   App shell + the shared glass kit used by every page.
+   (Home / Customers / Dashboard specifics live in pages.css)
+   ─────────────────────────────────────────────────────────── */
+
+/* ── the scene behind everything ───────────────────────── */
+/* The ribbon of light is drawn on a canvas by Background.jsx. These soft glows only show if WebGL is missing. */
+.scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: var(--bg); contain: strict; }
+.scene-gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.scene.has-gl .pool { display: none; }
+.pool { position: absolute; left: 0; top: 0; width: 78vmax; height: 78vmax; margin: -39vmax 0 0 -39vmax; transition: transform 1.8s var(--ease-out); will-change: transform; }
+.pool i { position: absolute; inset: 0; border-radius: 50%; }
+.pool-a { transform: translate3d(var(--ax, 78vw), var(--ay, 38vh), 0); }
+.pool-a i { background: radial-gradient(closest-side, rgba(255, 45, 70, 0.5), rgba(255, 45, 70, 0.16) 45%, rgba(255, 45, 70, 0) 100%); }
+.pool-b { width: 62vmax; height: 62vmax; margin: -31vmax 0 0 -31vmax; transform: translate3d(var(--bx, 8vw), var(--by, 0vh), 0); }
+.pool-b i { background: radial-gradient(closest-side, rgba(255, 176, 61, 0.24), rgba(255, 176, 61, 0) 100%); }
+.pool-c { width: 90vmax; height: 56vmax; margin: -28vmax 0 0 -45vmax; transform: translate3d(var(--cx, 40vw), var(--cy, 112vh), 0); }
+.pool-c i { background: radial-gradient(closest-side, rgba(56, 161, 255, 0.2), rgba(56, 161, 255, 0) 100%); }
+.scene[data-page="0"] { --ax: 76vw; --ay: 40vh; --bx: 40vw; --by: 80vh; --cx: 10vw; --cy: 100vh; }
+.scene[data-page="1"] { --ax: 90vw; --ay: 80vh; --bx: 10vw; --by: 90vh; --cx: 60vw; --cy: 110vh; }
+.scene[data-page="2"] { --ax: 94vw; --ay: 90vh; --bx: 10vw; --by: 100vh; --cx: 50vw; --cy: 118vh; }
+.scene[data-page="3"] { --ax: 20vw; --ay: 60vh; --bx: 80vw; --by: 80vh; --cx: 50vw; --cy: 110vh; }
+.scene[data-page="4"] { --ax: 64vw; --ay: 70vh; --bx: 10vw; --by: 20vh; --cx: 50vw; --cy: 116vh; }
+.scene-vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 130% 110% at 50% 45%, rgba(4, 2, 6, 0) 55%, rgba(4, 2, 6, 0.5) 100%); }
+
+.app { position: relative; z-index: 1; }
+
+/* ── pages: one scroll, four rooms ─────────────────────── */
+.page {
+  position: relative;
+  min-height: 100svh;
+  padding: 118px clamp(18px, 5vw, 72px) 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.page-inner { width: min(1240px, 100%); margin: 0 auto; }
+
+/* Anything with .depth flies in from behind as it scrolls into view and recedes as it leaves.
+   This is a CSS scroll-driven animation (animation-timeline: view()), so the browser runs it off the main
+   thread – no JavaScript runs while you scroll. Each card has its own timeline, so cards arrive one after
+   another by themselves. The hover tilt lives in `transform`; the scroll motion uses `translate`/`rotate`. */
+.page { perspective: 1500px; perspective-origin: 50% 40%; scroll-snap-align: start; }
+/* Panels lean toward the cursor (see lib/tilt.js). The lean is a transform with its own perspective, so a panel pivots
+   around its own centre. Only while it is leaning does the browser give it a layer of its own. */
+.depth, .auth-card, [data-tilt] { transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--s, 1)); }
+[data-tilting] { will-change: transform; }
+@supports (animation-timeline: view()) {
+  .depth { animation: depth-scroll linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+}
+@keyframes depth-scroll {
+  0%   { opacity: 0; translate: 0 44px -170px; rotate: 1 0 0 -9deg; }
+  20%  { opacity: 1; translate: 0 0 0;         rotate: 1 0 0 0deg; }
+  80%  { opacity: 1; translate: 0 0 0;         rotate: 1 0 0 0deg; }
+  100% { opacity: 0; translate: 0 -26px -130px; rotate: 1 0 0 7deg; }
+}
+@media (prefers-reduced-motion: reduce) { .depth { animation: none; } }
+/* (no scroll-snapping: it made the wheel feel sticky, because after every notch the browser pulled the page back to the start of a page) */
+/* ambient loops pause while you scroll, so nothing competes with the scroll itself */
+html[data-scrolling="true"] .pool i,
+html[data-scrolling="true"] .pd-bob,
+html[data-scrolling="true"] .pd-patch i { animation-play-state: paused; }
+
+/* headline words that blur into focus when their page arrives (like the reference site);
+   sentences use .plain, which only fades and rises (cheaper to draw) */
+.rw { display: inline-block; opacity: 0; filter: blur(10px); transform: translate3d(0, 0.34em, 0); }
+.rw.plain { filter: none; }
+html[data-ready="true"] .page[data-active="true"] .rw {
+  animation: reveal-word 0.95s var(--ease-out) both;
+  animation-delay: calc(var(--w, 0) * var(--st, 85ms) + 60ms);
+}
+html[data-ready="true"] .page[data-active="true"] .rw.plain { animation-name: reveal-plain; }
+@keyframes reveal-word {
+  0% { opacity: 0; filter: blur(10px); transform: translate3d(0, 0.34em, 0); }
+  100% { opacity: 1; filter: blur(0); transform: none; }
+}
+@keyframes reveal-plain {
+  0% { opacity: 0; transform: translate3d(0, 0.5em, 0); }
+  100% { opacity: 1; transform: none; }
+}
+.ital { font-family: var(--font-serif); font-style: italic; font-weight: 400; letter-spacing: -0.01em; }
+
+.page-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(42px, 5.6vw, 80px);
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+.page-title .ital { font-size: 1.08em; padding-right: 0.04em; }
+.page-sub { margin-top: 14px; max-width: 46ch; color: var(--text-2); font-size: 18px; line-height: 1.5; }
+
+/* small mono labels, like the "open beta / 248 apps connected" chips in the reference */
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 10px; width: fit-content;
+  padding: 7px 13px; border-radius: 9px; border: 1px solid var(--glass-line);
+  background: rgba(255, 255, 255, 0.035);
+  font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--text-2);
+}
+.eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+.mono { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: 0.02em; color: var(--text-3); }
+
+/* ── glass ─────────────────────────────────────────────── */
+/* Like the panels in the reference: nearly black, see-through enough that the ribbon glows behind them, a hairline
+   edge that is brightest where the cursor is, and a soft highlight that follows the cursor across the surface.
+   (No backdrop blur: it would have to be redrawn every frame under the moving ribbon.) */
+.glass {
+  --mx: 50%; --my: 0%;
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.012) 42%, rgba(255, 255, 255, 0) 100%),
+    var(--glass-fill, rgba(9, 6, 14, 0.6));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 30px 60px -34px rgba(0, 0, 0, 0.95);
+}
+.glass::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
+  background:
+    radial-gradient(240px circle at var(--mx) var(--my), rgba(255, 255, 255, calc(var(--glare, 0) * 0.85)), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(140deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.07) 26%, rgba(255, 255, 255, 0.02) 60%, rgba(255, 140, 90, 0.34));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0.85; transition: opacity 0.5s var(--ease-out);
+}
+.glass:hover::before { opacity: 1; }
+/* the soft light that follows the cursor over a leaning panel */
+.glass.depth::after, .auth-card::after, [data-tilt]::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  opacity: var(--glare, 0);
+  background:
+    radial-gradient(420px circle at var(--mx, 50%) var(--my, 30%), rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0) 60%),
+    radial-gradient(260px circle at var(--mx, 50%) var(--my, 30%), rgba(255, 90, 100, 0.1), rgba(255, 90, 100, 0) 70%);
+}
+.tile::after, .ccard::after { display: none; }
+
+/* ── buttons ───────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 48px; padding: 0 24px; border-radius: 999px; border: 1px solid transparent;
+  font-family: var(--font-body); font-weight: 600; font-size: 15.5px; letter-spacing: -0.005em;
+  transition: transform 0.35s var(--ease-out), background-color 0.3s, box-shadow 0.35s var(--ease-out), opacity 0.3s, border-color 0.3s;
+}
+.btn:hover:not(:disabled) { transform: translateY(-2px); }
+.btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* the red pill – the reference's lime button, in red */
+.btn-primary { background: var(--red); color: var(--on-red); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18) inset, 0 12px 34px -10px rgba(255, 45, 70, 0.75); }
+.btn-primary:hover:not(:disabled) { background: var(--red-hi); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25) inset, 0 16px 40px -10px rgba(255, 45, 70, 0.9); }
+.btn-ghost { background: rgba(255, 255, 255, 0.07); border-color: var(--glass-line); color: var(--text); }
+.btn-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.13); border-color: rgba(255, 255, 255, 0.28); }
+.btn-danger { background: rgba(255, 45, 70, 0.14); border-color: rgba(255, 90, 110, 0.5); color: #ffb3bd; }
+.btn-danger:hover:not(:disabled) { background: rgba(255, 45, 70, 0.26); }
+.btn-sm { min-height: 38px; padding: 0 16px; font-size: 14px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* ── round button (profile) ────────────────────────────── */
+.round-btn {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; padding: 0; color: var(--text);
+  background: linear-gradient(180deg, rgba(40, 18, 24, 0.85), rgba(18, 8, 12, 0.85));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 10px 24px -10px rgba(0, 0, 0, 0.85);
+  transition: transform 0.4s var(--ease-spring), border-color 0.3s, box-shadow 0.3s;
+}
+.round-btn:hover { transform: scale(1.07); border-color: rgba(255, 90, 110, 0.6); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 22px -4px rgba(255, 45, 70, 0.55), 0 10px 24px -10px rgba(0, 0, 0, 0.85); }
+.round-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.round-btn .initial { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: -0.02em; }
+
+/* ── top bar ───────────────────────────────────────────── */
+/* a soft dark fade under the bar, so content scrolling up never collides with the logo and the buttons */
+.app::before { content: ""; position: fixed; top: 0; left: 0; right: 0; height: 88px; z-index: 40; pointer-events: none; opacity: 0; transition: opacity 0.5s var(--ease-out); background: linear-gradient(180deg, rgba(4, 2, 6, 0.88), rgba(4, 2, 6, 0.5) 55%, rgba(4, 2, 6, 0)); }
+html[data-docked="true"] .app::before { opacity: 1; }
+.page-home { overflow-x: clip; }
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 18px clamp(14px, 3vw, 36px);
+  pointer-events: none;
+}
+.topbar-left, .topbar-right { display: flex; align-items: center; gap: 14px; }
+.topbar button, .topbar a { pointer-events: auto; }
+
+.logo-link { display: flex; align-items: center; text-decoration: none; padding: 6px 2px; transition: transform 0.4s var(--ease-spring); }
+.logo-link:hover { transform: scale(1.035); }
+.logo { display: inline-flex; align-items: center; gap: 10px; color: var(--text); }
+.logo-word { font-family: var(--font-display); font-weight: 700; font-size: calc(var(--ls, 34px) * 0.78); letter-spacing: -0.06em; line-height: 1; color: #fff; }
+.logo-ai { font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: 1.12em; letter-spacing: -0.01em; background: linear-gradient(120deg, #ff6a7d, #ff9a4d 55%, #ffd166); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: 0.04em; }
+
+/* Ask Pandu pill – invisible until Pandu has flown into it */
+.ask-pill {
+  display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 20px 0 6px; border-radius: 999px; color: var(--text);
+  background: linear-gradient(180deg, rgba(40, 18, 24, 0.88), rgba(18, 8, 12, 0.88));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 0 26px -8px rgba(255, 45, 70, 0.6), 0 10px 24px -10px rgba(0, 0, 0, 0.85);
+  font-weight: 600; font-size: 15px;
+  opacity: var(--fly);
+  transform: translateY(calc((1 - var(--fly)) * -10px)) scale(calc(0.88 + 0.12 * var(--fly)));
+  pointer-events: none !important;
+}
+html[data-docked="true"] .ask-pill { pointer-events: auto !important; }
+html[data-docked="true"] .ask-pill:hover { border-color: rgba(255, 90, 110, 0.6); }
+.ask-slot { width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25); }
+
+/* flying Pandu */
+.pandu-fly {
+  position: fixed; left: 0; top: 0; z-index: 60; transform-origin: 0 0; pointer-events: none;
+  will-change: transform;
+}
+.pandu-fly .pd-torso, .pandu-fly .pd-ground { opacity: var(--body, 1); }
+.pandu-fly .pd-hit { pointer-events: auto; }
+.pandu-fly.is-docked .pd-hit { pointer-events: none; }
+.pandu-fly.is-docked .pd-bubble { opacity: 0 !important; }
+
+/* profile menu */
+.profile { position: relative; }
+.profile-menu { position: absolute; z-index: 5; top: 58px; left: 0; width: 290px; padding: 16px; border-radius: 22px; background: linear-gradient(180deg, #1e0e13, #10070a); animation: pop-in 0.35s var(--ease-out); transform-origin: 20px 0; }
+.profile-who { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; margin-bottom: 8px; border-bottom: 1px solid var(--panel-line); }
+.profile-who strong { display: block; font-size: 16px; }
+.profile-who small { color: var(--text-3); font-size: 14px; }
+.profile-avatar { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--red); color: var(--on-red); font-family: var(--font-display); font-weight: 800; font-size: 20px; }
+.menu-item { display: block; width: 100%; text-align: left; padding: 12px 12px; border: 0; border-radius: 12px; background: transparent; font-size: 15px; font-weight: 500; }
+.menu-item:hover:not(:disabled) { background: rgba(255, 255, 255, 0.08); }
+.menu-item:disabled { opacity: 0.45; cursor: not-allowed; }
+.menu-confirm p { font-size: 14.5px; line-height: 1.45; color: var(--text-2); margin: 6px 4px 12px; }
+.profile-who small { display: block; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+.menu-sep { height: 1px; margin: 8px 0; background: var(--panel-line); }
+.menu-item.is-danger { color: #ff9aa8; }
+.menu-item.is-danger:hover:not(:disabled) { background: rgba(255, 45, 70, 0.14); }
+@keyframes pop-in { from { opacity: 0; transform: translateY(-8px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+/* ── forms ─────────────────────────────────────────────── */
+.field { display: grid; gap: 8px; }
+.field > label, .field-label { font-weight: 600; font-size: 14.5px; color: var(--text); }
+.field small { color: var(--text-3); font-size: 13.5px; font-weight: 400; }
+.input, .select {
+  width: 100%; min-height: 50px; padding: 0 16px; border-radius: 14px;
+  background: var(--field); border: 1px solid var(--field-line); color: var(--text); font-size: 15.5px;
+  transition: border-color 0.25s, box-shadow 0.25s, background-color 0.25s;
+}
+.input::placeholder { color: var(--text-3); }
+.input:hover, .select:hover { border-color: rgba(255, 255, 255, 0.3); }
+.input:focus, .select:focus { outline: none; border-color: var(--red-hi); background: rgba(255, 255, 255, 0.075); box-shadow: 0 0 0 4px rgba(255, 45, 70, 0.22); }
+.select { appearance: none; -webkit-appearance: none; padding-right: 44px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+.select option { color: #f7f2f3; background: #140a0d; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid .span-2 { grid-column: 1 / -1; }
+.form-error { color: #ffc2ca; background: rgba(255, 45, 70, 0.12); border: 1px solid rgba(255, 90, 110, 0.45); border-radius: 12px; padding: 10px 14px; font-size: 14.5px; }
+.form-note { color: var(--text-3); font-size: 14px; line-height: 1.5; }
+.seg { display: inline-flex; justify-self: start; width: fit-content; padding: 4px; gap: 4px; border-radius: 999px; background: var(--field); border: 1px solid var(--field-line); }
+.seg button { border: 0; background: transparent; border-radius: 999px; padding: 0 16px; min-height: 36px; font-weight: 600; font-size: 14px; color: var(--text-2); transition: background-color 0.3s, color 0.3s; }
+.seg button[aria-pressed="true"] { background: var(--red); color: var(--on-red); }
+
+/* image drop zone (customer photo) */
+.dropzone { display: grid; place-items: center; min-height: 148px; padding: 14px; border-radius: 16px; border: 1.5px dashed rgba(255, 255, 255, 0.28); background: rgba(255, 255, 255, 0.035); transition: border-color 0.25s, background-color 0.25s; }
+.dropzone.is-drag { border-color: var(--red-hi); background: rgba(255, 45, 70, 0.1); }
+.dropzone.has-image { grid-auto-flow: column; gap: 18px; justify-content: start; place-items: center start; border-style: solid; }
+.dropzone img { width: 120px; height: 120px; object-fit: cover; border-radius: 14px; border: 1px solid var(--glass-line); }
+.dropzone-btn { display: grid; justify-items: center; gap: 4px; padding: 14px 20px; border: 0; background: transparent; color: var(--text); }
+.dropzone-btn svg { width: 28px; height: 28px; fill: none; stroke: var(--red-hi); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 4px; }
+.dropzone-btn strong { font-weight: 600; font-size: 15.5px; }
+.dropzone-btn small { color: var(--text-3); font-size: 13.5px; }
+
+/* ── modal window (Add customer, carousels) ── */
+.modal-root { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; }
+.modal-scrim {
+  position: absolute; inset: 0;
+  background: radial-gradient(80% 70% at 50% 42%, var(--tint, rgba(120, 0, 20, 0.5)), rgba(3, 1, 2, 0) 78%), rgba(5, 2, 3, 0.985);
+  animation: fade-in 0.45s ease both;
+  transition: background 0.8s ease;
+}
+.modal-root.is-closing .modal-scrim { animation: fade-out 0.32s ease both; }
+.modal {
+  position: relative; width: min(640px, 100%); max-height: calc(100svh - 40px); overflow: auto; padding: 30px;
+  background: radial-gradient(120% 80% at 0% 0%, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 52%), #0a060c;
+  animation: modal-in 0.65s var(--ease-out) both; transform-origin: 50% 100%;
+}
+.modal-root.is-closing .modal { animation: modal-out 0.32s var(--ease-io) both; }
+.modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.modal-title { font-family: var(--font-display); font-weight: 700; font-size: 32px; letter-spacing: -0.04em; line-height: 1.05; }
+.modal-sub { margin-top: 6px; color: var(--text-2); font-size: 15.5px; }
+.icon-btn { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; padding: 0; border: 1px solid var(--glass-line); background: var(--glass); color: var(--text); transition: transform 0.35s var(--ease-spring), background-color 0.3s; }
+.icon-btn:hover { transform: rotate(90deg) scale(1.06); background: rgba(255, 255, 255, 0.14); }
+.icon-btn svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.modal-actions {
+  display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; flex-wrap: wrap;
+  /* stays visible at the bottom of a tall sheet */
+  position: sticky; bottom: -30px; z-index: 3; margin-left: -30px; margin-right: -30px; padding: 16px 30px 28px; margin-bottom: -30px;
+  background: linear-gradient(180deg, rgba(14, 6, 9, 0), rgba(14, 6, 9, 0.94) 38%);
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes modal-in { from { opacity: 0; transform: perspective(1400px) translate3d(0, 60px, -240px) rotateX(-16deg) scale(0.94); } to { opacity: 1; transform: perspective(1400px) none; } }
+@keyframes modal-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: perspective(1400px) translate3d(0, 40px, -180px) rotateX(-10deg) scale(0.95); } }
+
+/* ── toasts ────────────────────────────────────────────── */
+.toasts { position: fixed; left: 50%; bottom: 118px; transform: translateX(-50%); z-index: 120; display: grid; gap: 10px; justify-items: center; pointer-events: none; }
+.toast { display: flex; align-items: center; gap: 10px; padding: 12px 20px 12px 16px; border-radius: 999px; font-weight: 600; font-size: 15px; animation: toast-in 0.55s var(--ease-spring) both; }
+.toast svg { width: 21px; height: 21px; fill: none; stroke: var(--good); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.toast-warn svg { stroke: var(--warn); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(20px) scale(0.9); } to { opacity: 1; transform: none; } }
+
+/* ── suggestion chips (chat, Support) ─────────────────── */
+.chip { border: 1px solid var(--glass-line); background: var(--glass); border-radius: 999px; padding: 8px 14px; font-weight: 500; font-size: 13.5px; transition: background-color 0.25s, transform 0.3s var(--ease-out), border-color 0.25s; }
+.chip:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+.chip:disabled { opacity: 0.5; cursor: default; }
+.chat-send { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--red); color: var(--on-red); display: grid; place-items: center; transition: transform 0.3s var(--ease-spring), background-color 0.3s, opacity 0.2s; }
+.chat-send:hover:not(:disabled) { transform: scale(1.08); background: var(--red-hi); }
+.chat-send:disabled { opacity: 0.4; cursor: default; }
+.chat-send svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── the opening: flat red screen, one mark, then an iris ─ */
+.splash { position: fixed; inset: 0; z-index: 300; overflow: hidden; pointer-events: all; }
+.splash-iris {
+  position: absolute; left: 50%; top: 50%; width: 0; height: 0; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 150vmax var(--red);
+}
+.splash.is-open { pointer-events: none; }
+.splash.is-open .splash-iris { animation: iris 1.15s var(--ease-io) forwards; }
+@keyframes iris { to { width: 270vmax; height: 270vmax; } }
+.splash-word {
+  position: absolute; left: 50%; top: 50%; translate: -50% -50%; white-space: nowrap;
+  font-family: var(--font-display); font-weight: 800; font-size: clamp(44px, 7vw, 76px); letter-spacing: -0.06em; line-height: 1; color: #16020a;
+  animation: mark-in 0.7s var(--ease-spring) both;
+}
+.splash-word i { font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: 1.12em; letter-spacing: -0.01em; color: #fff; }
+.splash.is-open .splash-word { animation: mark-out 0.7s var(--ease-io) forwards; }
+@keyframes mark-in { from { opacity: 0; transform: scale(0.8) translateY(14px); filter: blur(10px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes mark-out { to { opacity: 0; transform: scale(1.5); } }
+
+/* ── small screens ─────────────────────────────────────── */
+@media (max-width: 760px) {
+  .topbar { padding: 12px 12px; }
+  .logo-word { font-size: 20px; }
+  .round-btn { width: 42px; height: 42px; }
+  .ask-pill { height: 42px; padding-right: 14px; }
+  .ask-text { display: none; }
+  .form-grid { grid-template-columns: 1fr; }
+  .modal { padding: 22px; }
+  .modal-actions { bottom: -22px; margin-left: -22px; margin-right: -22px; margin-bottom: -22px; padding: 14px 22px 22px; }
+  .chat { bottom: 90px; }
+}
+
+/* windows without the glass sheet (carousels) */
+.modal-root:has(.modal-bare) .modal-scrim { background: radial-gradient(90% 80% at 50% 45%, var(--tint, rgba(120, 0, 20, 0.5)), rgba(3, 1, 2, 0) 80%), rgba(5, 2, 3, 0.99); }
+
+/* ── headlines ─────────────────────────────────────────── */
+.hero-title .rw:not(.ital), .page-title .rw:not(.ital), .support-title .rw:not(.ital) {
+  background: linear-gradient(180deg, #ffffff 25%, #ffd6dc 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero-title .ital, .page-title .ital, .support-title .ital {
+  background: linear-gradient(115deg, #ff6f82 0%, #ff9a52 52%, #ffd36b 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  padding-bottom: 0.14em; margin-bottom: -0.14em;
+}
+/* light behind Pandu, in the ribbon's colours: red in the middle, amber up to the right, blue down to the left */
+.hero-stage { position: relative; }
+.hero-stage::before {
+  content: ""; position: absolute; left: 50%; top: 52%; width: min(760px, 74vw); aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none;
+  background:
+    radial-gradient(closest-side at 66% 34%, rgba(255, 190, 70, 0.16), rgba(255, 190, 70, 0) 70%),
+    radial-gradient(closest-side at 32% 70%, rgba(56, 161, 255, 0.17), rgba(56, 161, 255, 0) 70%),
+    radial-gradient(closest-side, rgba(255, 60, 82, 0.26), rgba(255, 60, 82, 0.07) 55%, rgba(255, 60, 82, 0) 100%);
+}
+.hero-stage > * { position: relative; }

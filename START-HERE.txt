@@ -1,0 +1,20 @@
+CLASSIFAI - FINAL VERSION (everything in one zip)
+
+This zip is the whole project. It includes:
+  backend\   the Python server, your trained SVM, the database and sign-in code
+  frontend\  the website
+  DEPLOY.md and DEPLOY-VERCEL.md   the steps to put it online for free
+  .gitignore, Dockerfile, .dockerignore   hosting helper files
+
+HOW TO USE IT
+1. Unzip this file.
+2. Open the unzipped "classifai" folder. Copy the folders "backend" and "frontend" over the ones in your PyCharm
+   PythonProject folder. When Windows asks, choose "Replace the files in the destination".
+   (Your own .env file, node_modules and .venv are NOT in this zip, so they stay safe.)
+3. Copy the other files (.gitignore, Dockerfile, .dockerignore, DEPLOY.md, DEPLOY-VERCEL.md) into the PythonProject folder,
+   next to backend and frontend. If you cannot see files that start with a dot, turn on "Show hidden files" in File Explorer.
+4. In the website terminal:   cd frontend   then   npm install
+5. In the other terminal (backend):   python app.py
+6. Open http://localhost:5173 and create an account.
+
+TO PUT IT ONLINE: open DEPLOY.md (parts A and B) and then DEPLOY-VERCEL.md (parts C, D, E).

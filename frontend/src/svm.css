@@ -1,0 +1,42 @@
+/* The SVM map on the Model page. */
+.svm-map { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; overflow: visible; }
+.svm-street { fill: rgba(255, 255, 255, 0.07); stroke: none; }
+.svm-line { fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.6)); }
+.svm-pt { stroke: rgba(0, 0, 0, 0.5); stroke-width: 0.8; }
+.svm-pt.is-leave { fill: var(--red); }
+.svm-pt.is-stay { fill: var(--good); }
+.svm-pt.is-wrong { stroke: #fff; stroke-width: 1.4; }
+.svm-sv { fill: none; stroke: rgba(255, 255, 255, 0.62); stroke-width: 1.2; stroke-dasharray: 2.4 3; }
+.svm-map.is-on .svm-sv { animation: svm-spin 14s linear infinite; transform-box: fill-box; transform-origin: center; }
+html[data-scrolling="true"] .svm-map .svm-sv { animation-play-state: paused; }
+@keyframes svm-spin { to { transform: rotate(360deg); } }
+.svm-axis path { fill: none; stroke: rgba(255, 255, 255, 0.28); stroke-width: 1.2; stroke-linecap: round; }
+.svm-axis text { fill: rgba(247, 242, 243, 0.55); font-family: var(--font-mono); font-size: 10.5px; }
+
+.svm-you { cursor: grab; transition: transform 0.9s var(--ease-out); outline: none; }
+.svm-map.is-drag .svm-you { cursor: grabbing; transition: none; }
+.svm-you-halo { fill: rgba(110, 231, 183, 0.2); stroke: rgba(110, 231, 183, 0.7); stroke-width: 1.4; transition: fill 0.4s, stroke 0.4s; }
+.svm-you-core { fill: #fff; stroke: rgba(0, 0, 0, 0.5); stroke-width: 1; }
+.svm-you.is-leave .svm-you-halo { fill: rgba(255, 45, 70, 0.22); stroke: rgba(255, 90, 110, 0.85); }
+.svm-map.is-on .svm-you-halo { animation: svm-pulse 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+html[data-scrolling="true"] .svm-map .svm-you-halo { animation-play-state: paused; }
+.svm-you:focus-visible .svm-you-halo { stroke: #fff; stroke-width: 2; }
+@keyframes svm-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.22); } }
+
+.svm-readout { display: flex; align-items: center; gap: 16px; margin-top: 14px; }
+.svm-readout p { color: var(--text-2); font-size: 14.5px; line-height: 1.45; }
+.svm-verdict { flex: none; display: grid; gap: 0; min-width: 118px; padding: 8px 14px; border-radius: 16px; border: 1px solid rgba(110, 231, 183, 0.34); background: rgba(110, 231, 183, 0.1); color: var(--good); transition: background-color 0.4s, border-color 0.4s, color 0.4s; }
+.svm-verdict strong { font-family: var(--font-display); font-weight: 700; font-size: 30px; line-height: 1.05; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+.svm-verdict span { font-size: 12.5px; font-weight: 600; }
+.svm-verdict.is-leave { border-color: rgba(255, 90, 110, 0.5); background: rgba(255, 45, 70, 0.14); color: var(--red-hi); }
+.svm-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.svm-chips .chip.is-on { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.4); }
+.svm-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--panel-line); font-size: 13px; color: var(--text-2); }
+.svm-legend .is-warn { color: var(--amber); }
+.svm-ring { display: inline-block; width: 12px; height: 12px; margin-right: 6px; border-radius: 50%; border: 1.4px dashed rgba(255, 255, 255, 0.7); vertical-align: -1px; }
+.model-map .seg { max-width: 100%; }
+.model-foot { margin-top: 14px; color: var(--text-3); font-size: 11.5px; line-height: 1.5; }
+@media (max-width: 560px) {
+  .svm-readout { flex-direction: column; align-items: flex-start; }
+  .model-map .model-map-head { flex-wrap: wrap; }
+}

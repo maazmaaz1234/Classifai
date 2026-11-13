@@ -1,0 +1,114 @@
+/* Pandu – your original panda (230 × 340), plus head/eye tracking, hover glow, wave and bubble.
+   Everything here is flat shapes + transforms only, so it stays smooth. */
+.pandu {
+  --nx: 0; --ny: 0; --bx: 0; --by: 0;
+  position: relative;
+  user-select: none; -webkit-user-select: none;
+}
+.pd-bob { position: absolute; inset: 0; animation: pd-bob 5.4s ease-in-out infinite; transition: transform .6s cubic-bezier(.2,.9,.3,1), filter .6s ease; }
+@keyframes pd-bob { 0%,100% { translate: 0 0; } 50% { translate: 0 -6px; } }
+/* hover: lifts, brightens and eases back when the cursor leaves */
+.pandu.is-hover .pd-bob { transform: translateY(-7px) scale(1.04); filter: brightness(1.07) saturate(1.1); }
+
+.pd-ground {
+  position: absolute; left: 22px; top: 318px; width: 186px; height: 22px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0,0,0,.55), rgba(0,0,0,0));
+  transform: translateX(calc(var(--bx) * 6px));
+}
+
+/* ── body: follows the cursor a little ─────────────────── */
+.pd-torso { position: absolute; inset: 0; transform: translateX(calc(var(--bx) * 4px)); }
+.pd-body {
+  position: absolute; top: 155px; left: 35px; width: 160px; height: 160px; z-index: 2;
+  border-radius: 43% 43% 27% 27%;
+  background: linear-gradient(135deg, #ff5469 0%, #e32743 48%, #b0102a 100%);
+  border: 2px solid rgba(255,255,255,.22);
+  box-shadow:
+    inset 6px 0 16px -4px rgba(58,161,255,.6),
+    inset -8px -3px 18px -4px rgba(255,184,61,.55),
+    inset -9px -4px 0 rgba(150,10,32,.22),
+    0 20px 28px -8px rgba(0,0,0,.5),
+    0 0 46px -10px rgba(255,60,82,.6);
+}
+.pd-body::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(118deg, rgba(255,255,255,.3) 0%, rgba(255,255,255,0) 40%); }
+.pd-collar { position: absolute; top: -5px; left: 51px; width: 55px; height: 27px; background: #fffaf4; border-radius: 0 0 50% 50%; }
+.pd-p {
+  position: absolute; left: 0; right: 0; top: 50px; text-align: center;
+  font-family: var(--font-display); font-weight: 800; font-size: 46px; line-height: 1; letter-spacing: -.02em; color: rgba(255,255,255,.95);
+  text-shadow: 0 2px 0 rgba(150,10,25,.35);
+}
+.pd-arm { position: absolute; top: 184px; width: 48px; height: 112px; border-radius: 40px; background: #fffaf4; z-index: 1; transform-origin: 50% 14%; box-shadow: inset -5px -3px 0 #e6dee8, inset 4px 0 0 rgba(120,190,255,.2); }
+.pd-arm-l { left: 11px; transform: rotate(18deg); }
+.pd-arm-r { right: 11px; transform: rotate(-18deg); }
+.pandu.is-greeting .pd-arm-r { animation: pd-wave 1.15s ease-in-out 0.1s 3 both; }
+@keyframes pd-wave {
+  0%   { transform: rotate(-18deg); }
+  18%  { transform: rotate(-142deg); }
+  36%  { transform: rotate(-118deg); }
+  54%  { transform: rotate(-146deg); }
+  72%  { transform: rotate(-120deg); }
+  100% { transform: rotate(-18deg); }
+}
+
+/* ── head: turns toward the cursor ─────────────────────── */
+.pd-head-wrap {
+  position: absolute; left: 0; top: 0; width: 230px; height: 175px; z-index: 3;
+  transform-origin: 114px 150px;
+  transform: translate(calc(var(--nx) * 7px), calc(var(--ny) * 4px)) rotate(calc(var(--nx) * 3.5deg));
+}
+.pd-ear { position: absolute; top: 0; width: 60px; height: 62px; border-radius: 50%; background: #181719; box-shadow: inset 2px 2px 0 rgba(120,185,255,.28); }
+.pd-ear-l { left: 22px; transform: rotate(-22deg); }
+.pd-ear-r { right: 22px; transform: rotate(22deg); }
+.pd-head {
+  position: absolute; width: 165px; height: 153px; top: 18px; left: 32px;
+  border-radius: 47% 47% 44% 44%; background: #fffaf4; border: 2px solid #f1e8e4;
+  box-shadow: inset 6px 3px 0 rgba(120,190,255,.16), inset -8px -8px 0 #e6dfe8, 0 16px 24px -10px rgba(0,0,0,.45), 0 0 40px -8px rgba(255,100,110,.4);
+}
+/* eyes, nose and mouth slide a little further than the head, so he really looks at you */
+.pd-face { position: absolute; inset: 0; transform: translate(calc(var(--nx) * 6px), calc(var(--ny) * 4px)); }
+.pd-patch { position: absolute; top: 54px; width: 36px; height: 48px; border-radius: 50%; background: #252124; transform: rotate(20deg); box-shadow: 0 0 12px rgba(58,161,255,.28); }
+.pd-patch-l { left: 31px; }
+.pd-patch-r { right: 31px; transform: rotate(-20deg); }
+.pd-patch i {
+  position: absolute; width: 12px; height: 14px; top: 12px; left: 12px; border-radius: 50%; background: #fff;
+  transform: translate(calc(var(--nx) * 4px), calc(var(--ny) * 5px));
+  animation: pd-blink 6s infinite;
+}
+@keyframes pd-blink { 0%, 94%, 100% { scale: 1 1; } 96.5% { scale: 1 .1; } }
+.pd-nose { position: absolute; top: 103px; left: 75px; width: 16px; height: 11px; border-radius: 50% 50% 55% 55%; background: #171416; }
+.pd-mouth { position: absolute; top: 112px; left: 81px; width: 2px; height: 12px; background: #171416; }
+.pd-mouth::after { content: ""; position: absolute; width: 16px; height: 8px; border-bottom: 2px solid #171416; border-radius: 0 0 50% 50%; left: -7px; top: 5px; transition: all .3s ease; }
+.pandu.is-greeting .pd-mouth::after { width: 22px; height: 9px; left: -10px; top: 5px; }   /* a wider smile – the mouth stays closed */
+
+/* ── speech bubble: dark glass, a lit hairline edge, the name in the ribbon's colours ── */
+.pd-bubble {
+  position: absolute; left: -34px; top: -28px; z-index: 6; padding: 10px 19px 11px; border-radius: 18px 18px 18px 6px; white-space: nowrap;
+  font-family: var(--font-display); font-weight: 600; font-size: 15.5px; letter-spacing: -.015em; color: #fff;
+  background: linear-gradient(180deg, rgba(36,22,44,.95), rgba(13,8,21,.97));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 16px 32px -10px rgba(0,0,0,.85), 0 0 40px -8px rgba(255,80,100,.5);
+  opacity: 0; transform: translateY(8px) scale(.9); transform-origin: 20% 100%;
+  transition: opacity .35s ease, transform .5s cubic-bezier(.3,1.35,.4,1);
+  pointer-events: none;
+}
+.pd-bubble::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(140deg, rgba(255,255,255,.6), rgba(255,255,255,.08) 34%, rgba(255,150,90,.65) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.pd-bubble::after {
+  content: ""; position: absolute; left: 22px; bottom: -6px; width: 12px; height: 12px; transform: rotate(45deg); border-radius: 0 0 4px 0;
+  background: rgba(13,8,21,.97); border-right: 1px solid rgba(255,150,90,.5); border-bottom: 1px solid rgba(255,150,90,.5);
+}
+.pd-bubble em {
+  font-family: var(--font-serif); font-style: italic; font-weight: 400; font-size: 1.2em; letter-spacing: -.01em; padding-right: .06em;
+  background: linear-gradient(115deg, #ff6f82, #ff9a52 55%, #ffd36b); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.pandu.is-greeting .pd-bubble { opacity: 1; transform: none; }
+
+.pd-hit { position: absolute; inset: 0; z-index: 8; border: 0; background: transparent; border-radius: 40px; padding: 0; cursor: pointer; }
+.pd-hit:focus-visible { outline: 2px solid var(--red-hi); outline-offset: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pd-bob, .pd-patch i { animation: none; }
+}
