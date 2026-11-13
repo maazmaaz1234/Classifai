@@ -6,10 +6,11 @@ Final-year BCA project at Shree Vedha College.
 
 ## Screenshots
 
-<img width="1440" height="900" alt="classifai-3-model" src="https://github.com/user-attachments/assets/70ecf9e6-dc3c-4e0c-99d5-fdbc7bb6a6ac" />
-<img width="1440" height="900" alt="classifai-4-pandu" src="https://github.com/user-attachments/assets/8721805a-3bd1-43ef-b7e8-0fa0dd6b2a67" />
 <img width="1440" height="900" alt="classifai-1-customers" src="https://github.com/user-attachments/assets/5b7b353d-3700-43d8-8112-1d671f02e673" />
 
+<img width="1440" height="900" alt="classifai-4-pandu" src="https://github.com/user-attachments/assets/8721805a-3bd1-43ef-b7e8-0fa0dd6b2a67" />
+
+<img width="1440" height="900" alt="classifai-3-model" src="https://github.com/user-attachments/assets/70ecf9e6-dc3c-4e0c-99d5-fdbc7bb6a6ac" />
 
 ## What it does
 
